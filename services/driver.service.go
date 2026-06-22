@@ -48,7 +48,7 @@ func (s *DriverService) NewDriver(driver *dtos.DriverDTO) (*models.Driver, error
 
 func (s *DriverService) UpdateDriver(driver *models.Driver) (*models.Driver, error) {
 	var DriverExists *models.Driver
-	s.DBInstance.Transaction(func(tx *gorm.DB) error {
+	if err := s.DBInstance.Transaction(func(tx *gorm.DB) error {
 		if err := tx.First(&DriverExists).Where("rut = ?", driver.Rut).Error; err != nil {
 			return err
 		}
@@ -59,16 +59,43 @@ func (s *DriverService) UpdateDriver(driver *models.Driver) (*models.Driver, err
 			return err
 		}
 		return nil
-	})
+	}); err != nil {
+		return nil, err
+	}
 	return nil, nil
 }
 
-func fromDTOtoModel(model *models.Driver, dto *dtos.DriverDTO) *models.Driver {
-	auxModel := model
-	auxModel.Cellphone = dto.Cellphone
-	auxModel.Name = dto.Nombre
-	auxModel.Lastname = dto.Apellido
-	auxModel.Rut = dto.Rut
-	auxModel.Email = dto.Email
-	return auxModel
+func (s *DriverService) DeleteDriver(driverID uint) error {
+	var DriverExists *models.Driver
+	if err := s.DBInstance.Transaction(func(tx *gorm.DB) error {
+		if err := tx.First(&DriverExists).Where("ID = ?", driverID).Error; err != nil {
+			return err
+		}
+		if DriverExists == nil {
+			return errors.New("Conductor no encontrado en BBDD")
+		}
+		if err := tx.Delete(DriverExists).Error; err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *DriverService) FindAllDrivers() ([]models.Driver, error) {
+	var drivers []models.Driver
+	if err := s.DBInstance.Find(&drivers).Error; err != nil {
+		return nil, err
+	}
+	return drivers, nil
+}
+
+func (s *DriverService) FindByCompanyID(companyID uint) ([]models.Driver, error) {
+	var drivers []models.Driver
+	if err := s.DBInstance.Where("company_id = ?", companyID).Find(&drivers).Error; err != nil {
+		return nil, err
+	}
+	return drivers, nil
 }

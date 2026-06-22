@@ -7,5 +7,5 @@ type Place struct {
 	Latitude  float64 `gorm:"NOT NULL;" json:"latitude"`
 	Longitude float64 `gorm:"NOT NULL;" json:"longitude"`
 	Name      string  `gorm:"NOT NULL" json:"name"`
-	BleMAC    string  `gorm:"NOT NULL" json:"ble_mac"`
+	BleMAC    string  `gorm:"NOT NULL;uniqueIndex" json:"ble_mac"`
 }
